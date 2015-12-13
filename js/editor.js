@@ -15,6 +15,16 @@
       document.addEventListener('editor:added', (e) => {
         this.initiateEditor();
       });
+      document.addEventListener('file:new', (e) => {
+        this.reset();
+      });
+      document.addEventListener('file:saved', (e) => {
+        e.detail(this.contents());
+        this.storeMarkdown();
+      });
+      document.addEventListener('file:opened', (e) => {
+        this.setMarkdown(e.detail);
+      });
     }
 
     storeMarkdown() {

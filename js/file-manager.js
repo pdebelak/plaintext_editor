@@ -17,18 +17,18 @@
       document.addEventListener('file:shouldSave', () => {
         this.saveFile();
       });
-      document.addEventListener('file:shouldNew', () => {
+      document.addEventListener('file:new', () => {
         this.newFile();
       });
     }
 
     loadFileFromId(id) {
-      if (!id || !chrome) { return; }
+      if (!id) { return; }
 
       chrome.fileSystem.restoreEntry(id, (entry) => {
         this.chosenFile = entry;
+        this.setName();
       });
-      this.setName();
     }
 
     setName() {
@@ -54,7 +54,8 @@
           var reader = new FileReader();
 
           reader.onloadend = (e) => {
-            global.editor.setMarkdown(e.target.result);
+            var event = new CustomEvent('file:opened', { detail: e.target.result });
+            document.dispatchEvent(event);
           };
 
           reader.readAsText(file);
@@ -87,7 +88,6 @@
     }
 
     newFile() {
-      global.editor.reset();
       chrome.storage.local.set({ chosenFile: null });
       this.storeFileInfo(null);
     }
@@ -95,8 +95,8 @@
     replaceFileContents(writer) {
       writer.onwriteend = () => {
         if (writer.length === 0) {
-          writer.write(new Blob([global.editor.contents()], {type: 'text/plain'}));
-          global.editor.storeMarkdown();
+          var event = new CustomEvent('file:saved', { detail: function(contents) { writer.write(new Blob([contents], {type: 'text/plain'})); } });
+          document.dispatchEvent(event);
         }
       }
       writer.truncate(0);
@@ -107,5 +107,6 @@
 
   chrome.storage.local.get(['chosenFile'], (result) => {
     fileManager.loadFileFromId(result.chosenFile);
+    fileManager.setName();
   });
 })(window);

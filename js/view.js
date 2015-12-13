@@ -43,7 +43,6 @@
 
     listenForFileNameChange() {
       document.addEventListener('file:changed', (event) => {
-        debugger;
         this.displayFileName(event.detail);
       });
     }
@@ -58,7 +57,7 @@
         document.dispatchEvent(event);
       });
       this.newFileButton.addEventListener('click', () => {
-        var event = new Event('file:shouldNew');
+        var event = new Event('file:new');
         document.dispatchEvent(event);
       });
     }
