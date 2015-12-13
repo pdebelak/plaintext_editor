@@ -11,6 +11,8 @@
       var container = document.createElement('div');
       this.page.appendChild(container);
       container.classList.add('container');
+      var alerts = new Alerts(container);
+      alerts.render();
       var fileArea = new FileArea(container);
       fileArea.render();
       var tabs = new Tabs(container);
@@ -20,6 +22,46 @@
       section.classList.add('tab-content');
       var content = new Content(section);
       content.render();
+    }
+  }
+
+  const Alerts = class {
+    constructor(container) {
+      this.container = container;
+      this.alertBox = null;
+      this.listen();
+    }
+
+    displayAlert(alert, status) {
+      this.alertBox.classList.remove('removed');
+      this.alertBox.classList.remove('success');
+      this.alertBox.classList.remove('error');
+      this.alertBox.innerHTML = '';
+      var text = document.createTextNode(alert);
+      this.alertBox.appendChild(text);
+      this.alertBox.classList.add(status);
+      global.setTimeout(() => {
+        this.alertBox.classList.add('removed');
+      }, 2000);
+    }
+
+    listen() {
+      document.addEventListener('file:saved', (e) => {
+        console.log('saved!');
+        this.displayAlert('File saved!', 'success');
+      });
+      document.addEventListener('file:saveError', (e) => {
+        this.displayAlert('File could not be saved', 'error');
+      });
+      document.addEventListener('file:openError', (e) => {
+        this.displayAlert('File was not opened', 'error');
+      });
+    }
+
+    render() {
+      this.alertBox = document.createElement('div');
+      this.alertBox.classList.add('alert');
+      this.container.appendChild(this.alertBox);
     }
   }
 
@@ -62,27 +104,29 @@
       });
     }
 
+    renderFileName(container) {
+      this.fileNameContainer = document.createElement('p');
+      container.appendChild(this.fileNameContainer);
+      this.fileNameContainer.classList.add('file-name');
+      this.displayFileName();
+    }
+
+    createButton(text) {
+      var button = document.createElement('button');
+      this.container.appendChild(button);
+      var textNode = document.createTextNode(text);
+      button.appendChild(textNode);
+      return button;
+    }
 
     render() {
       var div = document.createElement('div');
       this.container.appendChild(div);
       div.classList.add('button-container');
-      this.fileNameContainer = document.createElement('p');
-      div.appendChild(this.fileNameContainer);
-      this.fileNameContainer.classList.add('file-name');
-      this.displayFileName();
-      this.openFileButton = document.createElement('button');
-      this.container.appendChild(this.openFileButton);
-      var openFileText = document.createTextNode('Open File');
-      this.openFileButton.appendChild(openFileText);
-      this.saveFileButton = document.createElement('button');
-      this.container.appendChild(this.saveFileButton);
-      var saveFileText = document.createTextNode('Save File');
-      this.saveFileButton.appendChild(saveFileText);
-      this.newFileButton = document.createElement('button');
-      this.container.appendChild(this.newFileButton);
-      var newFileText = document.createTextNode('New File');
-      this.newFileButton.appendChild(newFileText);
+      this.renderFileName(div);
+      this.openFileButton = this.createButton('Open File');
+      this.saveFileButton = this.createButton('Save File');
+      this.newFileButton = this.createButton('New File');
       this.listenForClicks();
     }
   }
@@ -183,9 +227,10 @@
 
     addEditor(element) {
       var div = document.createElement('div');
-      div.id = global.editorId;
+      var editorId = 'editor';
+      div.id = editorId;
       element.appendChild(div);
-      var event = new Event('editor:added');
+      var event = new CustomEvent('editor:added', { detail: editorId });
       document.dispatchEvent(event);
     }
 
@@ -202,20 +247,23 @@
       }
     }
 
+    createCol(row) {
+      var col = document.createElement('div');
+      col.classList.add('col');
+      col.classList.add('half');
+      row.appendChild(col);
+      return col;
+    }
+
     renderFirst() {
       var row = document.createElement('div');
       this.container.appendChild(row);
       row.classList.add('row');
-      var col1 = document.createElement('div');
-      col1.classList.add('col');
-      col1.classList.add('half');
-      var col2 = document.createElement('div');
-      col2.classList.add('col');
-      col2.classList.add('half');
-      col2.id = global.realtimeOuputId;
-      col2.innerHTML = global.editor.getMarkdown();
-      row.appendChild(col1);
-      row.appendChild(col2);
+      var col1 = this.createCol(row);
+      var col2 = this.createCol(row);
+      document.addEventListener('editor:updated', function(event) {
+        col2.innerHTML = event.detail;
+      });
       this.addEditor(col1);
     }
 
@@ -224,13 +272,13 @@
     }
 
     renderThird() {
-      this.container.innerHTML = global.editor.getMarkdown();
+      this.container.innerHTML = global.getMarkdown();
     }
 
     renderFourth() {
       var pre = document.createElement('pre');
       this.container.appendChild(pre);
-      var text = document.createTextNode(global.editor.getMarkdown());
+      var text = document.createTextNode(global.getMarkdown());
       pre.appendChild(text);
     }
   }

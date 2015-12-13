@@ -1,9 +1,6 @@
 (function(global) {
   'use strict';
 
-  global.editorId = 'editor';
-  global.realtimeOuputId = 'realtime-output';
-
   const Editor = class {
     constructor() {
       this.editor = null;
@@ -13,7 +10,7 @@
 
     listen() {
       document.addEventListener('editor:added', (e) => {
-        this.initiateEditor();
+        this.initiateEditor(e.detail);
       });
       document.addEventListener('file:new', (e) => {
         this.reset();
@@ -38,7 +35,7 @@
 
     setValues(value) {
       if(!this.editor) { return; }
-      if(typeof value === "undefined") { value = this.markdown; }
+      value = value || this.markdown;
       this.editor.setValue(value);
       this.editor.clearSelection(1);
       this.editor.focus();
@@ -62,27 +59,30 @@
       this.setValues();
     }
 
-    initiateEditor() {
-      if(!document.getElementById('editor')) { return; }
+    initiateEditor(editorId) {
+      if(!document.getElementById(editorId)) { return; }
 
       this.editor = ace.edit(editorId);
       this.editor.$blockScrolling = Infinity;
       this.editor.setTheme('ace/theme/xcode');
       this.editor.setKeyboardHandler('ace/keyboard/vim');
-      this.setValues();
       this.editor.getSession().setMode('ace/mode/markdown');
       this.editor.getSession().setUseWrapMode(true);
       this.editor.getSession().on('change', (e) => {
-        var realtimeOutput = document.getElementById(realtimeOuputId);
         this.storeMarkdown();
-        if(realtimeOutput) {
-          realtimeOutput.innerHTML = this.getMarkdown();
-        }
+        var event = new CustomEvent('editor:updated', { detail: this.getMarkdown() });
+        document.dispatchEvent(event);
+        this.storeMarkdown();
       });
+      this.setValues();
     }
   }
 
-  global.editor = new Editor();
+  const editor = new Editor();
+
+  global.getMarkdown = function() {
+    return editor.getMarkdown();
+  }
 
   chrome.storage.local.get(['markdown'], (result) => {
     editor.setMarkdown(result.markdown);

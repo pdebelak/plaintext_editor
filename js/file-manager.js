@@ -47,11 +47,18 @@
 
     openFile() {
       chrome.fileSystem.chooseEntry({type: 'openFile'}, (readOnlyEntry) => {
+        if(!readOnlyEntry) {
+          return this.openFileError();
+        }
 
         this.storeFileInfo(readOnlyEntry);
         chrome.storage.local.set({ chosenFile: chrome.fileSystem.retainEntry(this.chosenFile) });
         readOnlyEntry.file((file) => {
           var reader = new FileReader();
+
+          reader.onerror = () => {
+            this.openFileError();
+          };
 
           reader.onloadend = (e) => {
             var event = new CustomEvent('file:opened', { detail: e.target.result });
@@ -61,6 +68,11 @@
           reader.readAsText(file);
         });
       });
+    }
+
+    openFileError() {
+      var event = new Event('file:openError');
+      document.dispatchEvent(event);
     }
 
     saveFile() {
@@ -93,6 +105,11 @@
     }
 
     replaceFileContents(writer) {
+      writer.onerror = () => {
+        var event = new Event('file:saveError');
+        document.dispatchEvent(event);
+      };
+
       writer.onwriteend = () => {
         if (writer.length === 0) {
           var event = new CustomEvent('file:saved', { detail: function(contents) { writer.write(new Blob([contents], {type: 'text/plain'})); } });
