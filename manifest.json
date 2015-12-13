@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+
+  "name": "Plain Text Editor",
+  "description": "Type markdown and see it transformed into html",
+  "version": "1.0",
+
+  "app": {
+    "background": {
+      "scripts": ["js/open-window.js"]
+    }
+  },
+  "permissions": [
+    "storage",
+    { "fileSystem": ["write", "retainEntries"] }
+  ]
+}
