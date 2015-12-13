@@ -33,29 +33,33 @@
       this.listenForFileNameChange();
     }
 
-    displayFileName() {
+    displayFileName(fileName) {
       this.fileNameContainer.innerHTML = '';
-      var text = document.createTextNode(global.fileManager.fileName);
+      var text = document.createTextNode(fileName);
       if(this.fileNameContainer) {
         this.fileNameContainer.appendChild(text);
       }
     }
 
     listenForFileNameChange() {
-      document.addEventListener('file:changed', (e) => {
-        this.displayFileName();
+      document.addEventListener('file:changed', (event) => {
+        debugger;
+        this.displayFileName(event.detail);
       });
     }
 
     listenForClicks() {
       this.openFileButton.addEventListener('click', () => {
-        global.fileManager.openFile();
+        var event = new Event('file:shouldOpen');
+        document.dispatchEvent(event);
       });
       this.saveFileButton.addEventListener('click', () => {
-        global.fileManager.saveFile();
+        var event = new Event('file:shouldSave');
+        document.dispatchEvent(event);
       });
       this.newFileButton.addEventListener('click', () => {
-        global.fileManager.newFile();
+        var event = new Event('file:shouldNew');
+        document.dispatchEvent(event);
       });
     }
 
@@ -234,11 +238,4 @@
 
   const view = new View();
   view.render();
-
-  if(chrome) {
-    chrome.storage.local.get(['markdown', 'chosenFile'], (result) => {
-      global.editor.setMarkdown(result.markdown);
-      global.fileManager.loadFileFromId(result.chosenFile);
-    })
-  }
 })(window);

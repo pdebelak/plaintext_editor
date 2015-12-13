@@ -73,4 +73,8 @@
   }
 
   global.editor = new Editor();
+
+  chrome.storage.local.get(['markdown'], (result) => {
+    editor.setMarkdown(result.markdown);
+  });
 })(window);

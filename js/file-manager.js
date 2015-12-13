@@ -7,6 +7,19 @@
     constructor() {
       this.chosenFile = null;
       this.fileName = newFileText;
+      this.addEventListeners();
+    }
+
+    addEventListeners() {
+      document.addEventListener('file:shouldOpen', () => {
+        this.openFile();
+      });
+      document.addEventListener('file:shouldSave', () => {
+        this.saveFile();
+      });
+      document.addEventListener('file:shouldNew', () => {
+        this.newFile();
+      });
     }
 
     loadFileFromId(id) {
@@ -19,14 +32,15 @@
     }
 
     setName() {
-      var event = new Event('file:changed');
       if (this.chosenFile) {
         chrome.fileSystem.getDisplayPath(this.chosenFile, (displayPath) => {
           this.fileName = displayPath;
+          var event = new CustomEvent('file:changed', { detail: this.fileName });
           document.dispatchEvent(event);
         });
       } else {
         this.fileName = newFileText;
+        var event = new CustomEvent('file:changed', { detail: this.fileName });
         document.dispatchEvent(event);
       }
     }
@@ -89,5 +103,9 @@
     }
   }
 
-  global.fileManager = new FileManager();
+  const fileManager = new FileManager();
+
+  chrome.storage.local.get(['chosenFile'], (result) => {
+    fileManager.loadFileFromId(result.chosenFile);
+  });
 })(window);
