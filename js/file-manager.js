@@ -86,6 +86,7 @@
         });
       } else {
         chrome.fileSystem.chooseEntry({type: 'saveFile'}, (writableFileEntry) => {
+          chrome.storage.local.set({ chosenFile: chrome.fileSystem.retainEntry(writableFileEntry) });
           this.storeFileInfo(writableFileEntry);
           writableFileEntry.createWriter((writer) => {
             this.replaceFileContents(writer);
