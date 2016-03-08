@@ -68,6 +68,7 @@
       this.editor.setKeyboardHandler('ace/keyboard/vim');
       this.editor.getSession().setMode('ace/mode/markdown');
       this.editor.getSession().setUseWrapMode(true);
+      this.editor.getSession().setTabSize(2);
       this.editor.getSession().on('change', (e) => {
         this.storeMarkdown();
         var event = new CustomEvent('editor:updated', { detail: this.getMarkdown() });
